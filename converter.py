@@ -1,19 +1,17 @@
 import requests
 import json
+from secrets import encoded_id_and_secret
 from selenium import webdriver
 import time
 
 #authenticate requests
 def get_token():
     url = "https://accounts.spotify.com/api/token"
-    encoded_id_and_secret = "YTY1Mzg1YmE2ZGI1NGZlN2E4YzI5ZDg4NmQ5MmY5MjA6NDY0ZTg4ZWY1YTNjNDQ1YzkzZTI2YzI3ZWNiZTFkZGM="
     headers = {"Authorization": "Basic " + encoded_id_and_secret}
     data = {"grant_type": "client_credentials"}
     token_response = requests.request(method = "POST", url = url, headers = headers, data = data)
     token = token_response.json()["access_token"]
     return token
-
-temp_token = "BQAbI1vuqT9-cXHFRIOKXOGkeH6ck1yV9JTGmf5A6js32Ftib7JLSQRZA74v7fEz42Z6QsWPQOV1_c77bcM"
 
 def get_spotify_ID():
     url = input("Please enter the song's URL: ")
@@ -26,6 +24,7 @@ def get_song_name():
     headers = {"Authorization": "Bearer " + token}
     song_response = requests.request(method = "GET", url = url, headers = headers)
     song_title = song_response.json()["name"]
+    #song_pop = song_response.json()["popularity"]
     return song_title
 
 class AppleMusic:
@@ -66,5 +65,5 @@ class AppleMusic:
         self.login()
 
 #print(get_song_name())
-converter = AppleMusic()
-converter.main()
+#converter = AppleMusic()
+#converter.main()
