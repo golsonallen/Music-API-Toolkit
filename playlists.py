@@ -1,6 +1,5 @@
 import requests
 import json
-import pandas as pd
 from secrets import userID
 from secrets import token
 
@@ -11,7 +10,8 @@ class PlaylistOptimizer:
         self.token = token
 
     #creates a new playlist for the most popular songs from the user's given playlist
-    def create_new_playlist(self, name):
+    def create_new_playlist(self):
+        name = input("Please enter the name for the new optimized playlist: ")
         url = "https://api.spotify.com/v1/users/{}/playlists".format(self.userID)
         headers = {
             "Authorization": "Bearer {}".format(self.token), 
@@ -21,17 +21,18 @@ class PlaylistOptimizer:
             "name": name, 
             "public": False
         })
-        master_playlist = requests.post(url = url, headers = headers, data = body)
-        return master_playlist.json()["id"]
+        new_playlist = requests.post(url = url, headers = headers, data = body)
+        return new_playlist.json()["id"]
     
     #prompts user for a link to a playlist, returns playlist ID
     def get_playlist_ID(self):
-        playlistURL = input("Please enter the link to the playlist you would like to optimize: ")
+        playlistURL = input("Please enter the playlist's link: ")
         playlistID = playlistURL.split("/")[-1]
         return playlistID
 
     #get the playlist's items, an array of track objects
-    def get_playlist_songs(self, old_playlistID, limit):
+    def get_playlist_songs(self, limit):
+        old_playlistID = self.get_playlist_ID()
         url = "https://api.spotify.com/v1/playlists/{}/tracks".format(old_playlistID)
         headers = {
             "Authorization": "Bearer {}".format(self.token),
@@ -45,7 +46,8 @@ class PlaylistOptimizer:
         return playlist_response.json()["tracks"]["items"]
 
     #adds a track to list of songs to add if track's popularity is above threshold
-    def check_songs(self, songs_data, threshold):
+    def check_songs_popularity(self, limit, threshold):
+        songs_data = self.get_playlist_songs(limit)
         songs_to_add = []
         for song in songs_data:
             if int(song["track"]["popularity"]) > threshold:
@@ -65,12 +67,15 @@ class PlaylistOptimizer:
 
     def main(self):
         print("Welcome to Playlist Optimizer!")
-        new_playlist_name = input("Please enter the name for the new optimized playlist: ")
-        new_playlistID = self.create_new_playlist(new_playlist_name)
-        newID = self.get_playlist_ID()
+        print("Enter (1) to create a new playlist or (2) to add songs to an existing playlist")
+        choice = int(input("Choice: "))
+        if choice == 1:
+            new_playlistID = self.create_new_playlist()
+        else:
+            print("For the playlist you would like to add songs to,", end = " ")
+            new_playlistID = self.get_playlist_ID()
         print("Optimizing playlist....")
-        song_data = self.get_playlist_songs(newID, limit = 3)
-        songs_to_add = self.check_songs(song_data, threshold = 77)
+        songs_to_add = self.check_songs_popularity(limit = 100, threshold = 77)
         self.add_songs(songs_to_add, new_playlistID)
         print("Finished")
 
